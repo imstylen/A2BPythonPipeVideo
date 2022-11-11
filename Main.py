@@ -52,11 +52,12 @@ class VideoWindow(QMainWindow):
         layout.addWidget(self.FCRTextBox)
         layout.addWidget(self.DefectTextBox)
         layout.addWidget(self.pipeRunTextBox)
-        layout.addWidget(videoWidget)
-        layout.addLayout(controlLayout)
+
         layout.addWidget(self.errorLabel)
         layout.addWidget(self.current_rate_label)
         layout.addWidget(self.current_position_label)
+        layout.addLayout(controlLayout)
+        layout.addWidget(videoWidget)
 
         # Set widget to contain window contents
         wid.setLayout(layout)
@@ -229,12 +230,15 @@ class VideoWindow(QMainWindow):
         self.setErrorLabel(f"In: {get_hms_from_mili(self.In)} | Out: {get_hms_from_mili(self.Out)}")
         
     def SaveOutput(self):
+        self.setErrorLabel('Saving...')
+        file_format = self.currentVideo.split('.')[-1]
+        out_file_name = f"Output/{self.FCRTextBox.text()}_{self.DefectTextBox.text()}_{self.pipeRunTextBox.text()}.{file_format}"
+       
+        command = f"ffmpeg -i \"{self.currentVideo}\" -ss {get_hms_from_mili(self.In)} -to {get_hms_from_mili(self.Out)} -c:v copy -c:a copy \"{out_file_name}\""
         
-        out_file_name = f"Output/{self.FCRTextBox.text()}_{self.DefectTextBox.text()}_{self.pipeRunTextBox.text()}.mp4"
-        
-        command = f"ffmpeg -i \"{self.currentVideo}\" -ss {get_hms_from_mili(self.In)} -t {get_hms_from_mili(self.Out)} -c:v copy -c:a copy \"{out_file_name}\""
         print(command)
         os.system(command) 
+        self.setErrorLabel('Done!')
         
         
     def dragEnterEvent(self, event):
@@ -254,7 +258,7 @@ class VideoWindow(QMainWindow):
     def wheelEvent(self,event):
         if not self.currentVideo == "":
             self.mediaPlayer.setPosition(self.mediaPlayer.position() + 1000*self.current_rate*event.angleDelta().y()/120)
-        print(event.angleDelta().y())
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
